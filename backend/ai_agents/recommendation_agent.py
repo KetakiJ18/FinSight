@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 class RecommendationAgent:
     def __init__(self):
         self.llm = ChatOllama(
-            model="mistral",
+            model="llama3.2:1b",
             temperature=0.7
         )
 
