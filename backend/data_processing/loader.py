@@ -2,7 +2,6 @@ import pandas as pd
 from io import BytesIO
 
 def load_csv(file_bytes: bytes) -> pd.DataFrame:
-    """Loads CSV bytes into a Pandas DataFrame."""
     try:
         df = pd.read_csv(BytesIO(file_bytes))
         return df

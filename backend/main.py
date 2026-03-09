@@ -8,10 +8,9 @@ from .api import routes
 
 app = FastAPI(title="FinSight AI API", description="AI-powered financial analytics platform", version="1.0.0")
 
-# Configure CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In development, allow all. Change in production.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

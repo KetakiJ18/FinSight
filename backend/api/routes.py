@@ -15,55 +15,65 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# In-memory store for demo purposes (use DB or Redis in prod)
 LATEST_KPIS = {}
 
 @router.post("/upload")
+
 async def upload_financial_files(files: List[UploadFile] = File(...)):
     """
     Endpoint to receive, classify, clean, and merge multiple CSV files,
     then compute financial KPIs limit.
     """
+
+    global LATEST_KPIS
+    
     if not files:
         raise HTTPException(status_code=400, detail="No files uploaded")
     
     dataframes = {}
     
     try:
-        # 1. Load, Classify, and Clean Data
         for file in files:
             content = await file.read()
             df = load_csv(content)
             df = clean_dataframe(df)
             file_type = detect_file_type(df)
             
-            # Simplified classification
             dataframes[file_type] = df
 
-        # 2. Merge Data
         merged_df = merge_datasets(dataframes)
-        
-        if merged_df.empty:
-            raise HTTPException(status_code=400, detail="Failed to parse and merge data")
 
-        # 3. Calculate KPIs (Mocking exact column lookups for demo resilience)
-        # In a real scenario, you'd map standard columns out of the merged dataset.
-        
-        # MOCK SUMMARIZATION: normally you'd extract real floats from the latest year in df
-        # Here we hardcode some mock values representing the 'latest period' for AI processing
-        mock_kpis = {
-            "Net Profit Margin": 15.2,
-            "Return on Assets": 8.1,
-            "Current Ratio": 1.4,
-            "Debt-to-Equity": 0.8
+        merged_df.columns = merged_df.columns.str.strip().str.lower()
+
+        latest = merged_df.iloc[-1]
+
+        print(latest[[
+            "current_ratio",
+            "interest_coverage_ratio",
+            "price_to_sales",
+            "price_to_free_cash_flow",
+            "evebitda"
+        ]])
+
+        current_ratio = float(latest.get("current_ratio", 0))
+        interest_coverage = float(latest.get("interest_coverage_ratio", 0))
+        price_to_sales = float(latest.get("price_to_sales", 0))
+        price_to_fcf = float(latest.get("price_to_free_cash_flow", 0))
+        ev_ebitda = float(latest.get("evebitda", 0))
+
+        real_kpis = {
+            "Current Ratio": current_ratio,
+            "Interest Coverage Ratio": interest_coverage,
+            "Price to Sales": price_to_sales,
+            "Price to Free Cash Flow": price_to_fcf,
+            "EV/EBITDA": ev_ebitda
         }
-        
-        global LATEST_KPIS
-        LATEST_KPIS = mock_kpis
+
+        LATEST_KPIS = real_kpis
         
         return {
             "message": "Files processed successfully", 
-            "kpis_computed": mock_kpis,
+            "kpis_computed": real_kpis,
             "data_shape": merged_df.shape
         }
 
@@ -78,9 +88,10 @@ async def get_ai_insights():
     Endpoint to trigger the Agentic AI pipeline based on latest calculated KPIs.
     """
     global LATEST_KPIS
+
+    print(f"Latest kpis: {LATEST_KPIS}")
     
     if not LATEST_KPIS:
-        # Provide fallback dummy insights if no file uploaded yet
         return {
             "executiveSummary": "The company maintains a strong profitability profile with expanding net margins and robust return on assets. Liquidity remains healthy, though the slight contraction in the current ratio warrants monitoring of short-term liabilities. Solvency is excellent with a conservative debt-to-equity ratio.",
             "riskLevel": "Low",
@@ -93,7 +104,6 @@ async def get_ai_insights():
         }
 
     try:
-        # Initialize Agents
         insight_agent = InsightGenerationAgent()
         interp_agent = KPIInterpretationAgent()
         rec_agent = RecommendationAgent()

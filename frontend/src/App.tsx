@@ -28,10 +28,30 @@ function App() {
                 // Map raw KPIs to card format
                 const computed = uploadRes.kpis_computed;
                 const mappedKpis = [
-                    { title: "Net Profit Margin", value: `${computed["Net Profit Margin"]}%`, trend: { value: 2.1, isPositive: true }, icon: <TrendingUp className="w-4 h-4" /> },
-                    { title: "Return on Assets", value: `${computed["Return on Assets"]}%`, trend: { value: 0.4, isPositive: true }, icon: <Activity className="w-4 h-4" /> },
-                    { title: "Current Ratio", value: `${computed["Current Ratio"]}x`, trend: { value: 0.2, isPositive: false }, icon: <Wallet className="w-4 h-4" /> },
-                    { title: "Debt-to-Equity", value: `${computed["Debt-to-Equity"]}`, trend: { value: 0.05, isPositive: true }, icon: <ActivitySquare className="w-4 h-4" /> },
+                    { 
+                        title: "Current Ratio", 
+                        value: `${computed["Current Ratio"]}x`, 
+                        trend: { value: 0.2, isPositive: true }, 
+                        icon: <Wallet className="w-4 h-4" /> 
+                    },
+                    { 
+                        title: "Interest Coverage Ratio", 
+                        value: `${computed["Interest Coverage Ratio"]}`, 
+                        trend: { value: 0.5, isPositive: true }, 
+                        icon: <Activity className="w-4 h-4" /> 
+                    },
+                    { 
+                        title: "Price to Sales", 
+                        value: `${computed["Price to Sales"]}`, 
+                        trend: { value: 0.1, isPositive: false }, 
+                        icon: <TrendingUp className="w-4 h-4" /> 
+                    },
+                    { 
+                        title: "EV/EBITDA", 
+                        value: `${computed["EV/EBITDA"]}`, 
+                        trend: { value: 0.05, isPositive: true }, 
+                        icon: <ActivitySquare className="w-4 h-4" /> 
+                    },
                 ];
                 setKpis(mappedKpis);
             }

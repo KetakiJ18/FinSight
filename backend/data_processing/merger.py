@@ -12,10 +12,7 @@ def merge_datasets(dataframes: Dict[str, pd.DataFrame]) -> pd.DataFrame:
         
     merged_df = None
     
-    # A naive merge: assuming each uploaded df is a timeseries or has a standard 'year'/'date' column
-    # Real-world data would require more robust alignment handling.
     for label, df in dataframes.items():
-        # Example logic: look for a date/year column to align on
         date_cols = [col for col in df.columns if 'year' in col or 'date' in col]
         merge_key = date_cols[0] if date_cols else None
         
@@ -23,9 +20,8 @@ def merge_datasets(dataframes: Dict[str, pd.DataFrame]) -> pd.DataFrame:
             merged_df = df
         else:
             if merge_key and merge_key in merged_df.columns:
-                 merged_df = pd.merge(merged_df, df, on=merge_key, how='outer', suffixes=('', f'_{label}'))
+                merged_df = pd.merge(merged_df, df, on=merge_key, how='outer', suffixes=('', f'_{label}'))
             else:
-                 # If no common key is found, just concatenate along columns (risky without alignment)
-                 merged_df = pd.concat([merged_df, df], axis=1)
+                merged_df = pd.concat([merged_df, df], axis=1)
 
     return merged_df

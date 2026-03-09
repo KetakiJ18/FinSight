@@ -1,9 +1,9 @@
-def calculate_current_ratio(current_assets: float, current_liabilities: float) -> float:
+def current_ratio(current_assets: float, current_liabilities: float) -> float:
     if current_liabilities == 0:
         return 0.0
     return current_assets / current_liabilities
 
-def calculate_quick_ratio(current_assets: float, inventory: float, current_liabilities: float) -> float:
+def quick_ratio(current_assets: float, inventory: float, current_liabilities: float) -> float:
     if current_liabilities == 0:
         return 0.0
     return (current_assets - inventory) / current_liabilities
