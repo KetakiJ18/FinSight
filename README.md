@@ -1,4 +1,4 @@
-# FinSight AI — Intelligent Financial KPI & AI Analysis Platform
+# FinSight AI: Intelligent Financial KPI & AI Analysis Platform
 
 FinSight AI transforms raw financial statement data into clear, actionable business intelligence. It acts as an **AI Financial Analyst Assistant** that processes financial CSVs (P&L, Balance Sheets, Cash Flow), calculates key financial metrics, and generates natural-language insights via an Agentic AI pipeline.
 
@@ -101,9 +101,3 @@ The intelligence layer utilizes LangChain to orchestrate a series of single-purp
 - **KPI Interpretation Agent**: Analyzes the calculated ratios (e.g. Current Ratio) against industry baselines to assign a Risk Level (Low/Medium/High).
 - **Insight Generation Agent**: Formulates an Executive Summary simulating a CFO's analysis.
 - **Recommendation Agent**: Consumes the insights and returns numbered, actionable business strategies.
-
-## 🔮 Future Scope
-- Multi-company comparison dashboards.
-- Automated Data Engineering workflows with tools like `n8n`.
-- Live real-time streaming financial monitoring.
-- Historical trend forecasting via time-series models (ARIMA/Prophet).
