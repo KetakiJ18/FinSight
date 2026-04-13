@@ -4,7 +4,15 @@ import pandas as pd
 from ..data_processing.loader import load_csv, detect_file_type
 from ..data_processing.cleaner import clean_dataframe
 from ..data_processing.merger import merge_datasets
-from ..kpi_engine import profitability, liquidity, solvency, efficiency
+from ..kpi_engine.liquidity import current_ratio, quick_ratio
+from ..kpi_engine.solvency import debt_to_equity, debt_ratio
+from ..kpi_engine.profitability import (
+    net_profit_margin,
+    return_on_assets,
+    return_on_equity
+)
+from ..kpi_engine.efficiency import asset_turnover
+
 from ..ai_agents.data_agent import DataUnderstandingAgent
 from ..ai_agents.interpretation_agent import KPIInterpretationAgent
 from ..ai_agents.insight_agent import InsightGenerationAgent
@@ -43,30 +51,68 @@ async def upload_financial_files(files: List[UploadFile] = File(...)):
 
         merged_df = merge_datasets(dataframes)
 
-        merged_df.columns = merged_df.columns.str.strip().str.lower()
+        merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
 
-        latest = merged_df.iloc[-1]
+        merged_df.columns = (
+            merged_df.columns
+            .str.strip()
+            .str.lower()
+            .str.replace(" ", "_")
+            .str.replace("/", "_")
+        )
 
-        print(latest[[
-            "current_ratio",
-            "interest_coverage_ratio",
-            "price_to_sales",
-            "price_to_free_cash_flow",
-            "evebitda"
-        ]])
+        # Process only the last row for KPIs to optimize performance
+        if not merged_df.empty:
+            latest = merged_df.iloc[-1]
+        else:
+            latest = pd.Series()
 
-        current_ratio = float(latest.get("current_ratio", 0))
-        interest_coverage = float(latest.get("interest_coverage_ratio", 0))
-        price_to_sales = float(latest.get("price_to_sales", 0))
-        price_to_fcf = float(latest.get("price_to_free_cash_flow", 0))
-        ev_ebitda = float(latest.get("evebitda", 0))
+        print("Available columns:", list(merged_df.columns))
 
         real_kpis = {
-            "Current Ratio": current_ratio,
-            "Interest Coverage Ratio": interest_coverage,
-            "Price to Sales": price_to_sales,
-            "Price to Free Cash Flow": price_to_fcf,
-            "EV/EBITDA": ev_ebitda
+            # Liquidity
+            "Current Ratio": current_ratio(
+                latest.get("current_assets"),
+                latest.get("current_liabilities")
+            ),
+            "Quick Ratio": quick_ratio(
+                latest.get("current_assets"),
+                latest.get("inventory"),
+                latest.get("current_liabilities")
+            ),
+
+            # Solvency
+            "Debt to Equity": debt_to_equity(
+                latest.get("debt"),
+                latest.get("reserves") or latest.get("equity")  # Fallback
+            ),
+            "Debt Ratio": debt_ratio(
+                latest.get("debt"),
+                latest.get("total_assets")
+            ),
+
+            # Profitability
+            "Net Profit Margin": net_profit_margin(
+                latest.get("net_profit"),
+                latest.get("sales") or latest.get("revenue")
+            ),
+            "ROA": return_on_assets(
+                latest.get("net_profit"),
+                latest.get("total_assets")
+            ),
+            "ROE": return_on_equity(
+                latest.get("net_profit"),
+                latest.get("reserves") or latest.get("equity")
+            ),
+
+            # Efficiency
+            "Asset Turnover": asset_turnover(
+                latest.get("sales") or latest.get("revenue"),
+                latest.get("total_assets")
+            ),
+
+            "Free Cash Flow": latest.get("free_cash_flow_last_year"),
+            "Operating Cash Flow": latest.get("cash_from_operations_last_year")
         }
 
         LATEST_KPIS = real_kpis
@@ -113,23 +159,25 @@ async def get_ai_insights():
         # Agentic Pipeline Execution
         raw_insights = insight_agent.generate_insights(kpi_json)
         interpretation = interp_agent.interpret_kpis(kpi_json)
-        recommendations_str = rec_agent.generate_recommendations(raw_insights.content if hasattr(raw_insights, 'content') else raw_insights)
+        recommendations_str = rec_agent.generate_recommendations(raw_insights.content if hasattr(raw_insights, 'content') else str(raw_insights))
 
-        # Parsing the recommendations (naively splitting by newline for demo)
-        rec_content = recommendations_str.content if hasattr(recommendations_str, 'content') else recommendations_str
-        rec_list = [r.strip("- ") for r in rec_content.split("\n") if r.strip()]
+        # Parsing the recommendations (split by numbers)
+        rec_content = recommendations_str.content if hasattr(recommendations_str, 'content') else str(recommendations_str)
+        rec_list = [r.strip() for r in rec_content.split('\n') if r.strip() and any(char.isdigit() for char in r)]
 
-        # Parse interpretation for Risk Level (naive extraction)
-        interp_content = interpretation.content if hasattr(interpretation, 'content') else interpretation
+        # Parse interpretation for Risk Level
+        interp_content = interpretation.content if hasattr(interpretation, 'content') else str(interpretation)
         risk = "Medium"
-        if "High" in interp_content: risk = "High"
-        elif "Low" in interp_content: risk = "Low"
+        if "High" in interp_content.upper(): risk = "High"
+        elif "Low" in interp_content.upper(): risk = "Low"
+
+        health_status = interp_content.split("Health Status:")[-1].strip() if "Health Status:" in interp_content else "Status analysis unavailable."
 
         return {
-            "executiveSummary": raw_insights.content if hasattr(raw_insights, 'content') else raw_insights,
+            "executiveSummary": raw_insights.content if hasattr(raw_insights, 'content') else str(raw_insights),
             "riskLevel": risk,
-            "healthStatus": interp_content[:150] + "...", # Truncated summary
-            "recommendations": rec_list[:3] # Top 3
+            "healthStatus": health_status,
+            "recommendations": rec_list[:3]  # Top 3
         }
     
     except Exception as e:

@@ -12,13 +12,16 @@ class InsightGenerationAgent:
     def generate_insights(self, kpi_results: str):
         prompt = PromptTemplate(
             input_variables=["kpi_results"],
-            template="""
-You are a Chief Financial Officer summarizing financial performance.
-Provide an executive summary of these key performance indicators:
+            template="""You are a Chief Financial Officer summarizing financial performance.
+Provide a concise executive summary of these key performance indicators in 2-3 sentences:
 
 {kpi_results}
-"""
+
+Summary:"""
         )
 
-        chain = prompt | self.llm
-        return chain.invoke({"kpi_results": kpi_results})
+        try:
+            chain = prompt | self.llm
+            return chain.invoke({"kpi_results": kpi_results})
+        except Exception as e:
+            return f"AI Insight Generation Failed: {str(e)}. Default Summary: Financial performance analysis unavailable."

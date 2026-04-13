@@ -12,14 +12,19 @@ class KPIInterpretationAgent:
     def interpret_kpis(self, raw_kpis: str):
         prompt = PromptTemplate(
             input_variables=["raw_kpis"],
-            template="""
-You are a financial risk analyst.
+            template="""You are a financial risk analyst.
 Interpret the following raw KPIs and determine financial health status.
-Classify risk levels as Low, Medium, or High.
+Classify risk levels as Low, Medium, or High. Provide a brief health status description.
 
+KPIs:
 {raw_kpis}
-"""
+
+Risk Level (Low/Medium/High): 
+Health Status:"""
         )
 
-        chain = prompt | self.llm
-        return chain.invoke({"raw_kpis": raw_kpis})
+        try:
+            chain = prompt | self.llm
+            return chain.invoke({"raw_kpis": raw_kpis})
+        except Exception as e:
+            return f"AI Interpretation Failed: {str(e)}. Default: Medium risk, status unknown."

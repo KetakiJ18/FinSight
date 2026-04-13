@@ -13,7 +13,7 @@ def merge_datasets(dataframes: Dict[str, pd.DataFrame]) -> pd.DataFrame:
     merged_df = None
     
     for label, df in dataframes.items():
-        date_cols = [col for col in df.columns if 'year' in col or 'date' in col]
+        date_cols = [col for col in df.columns if 'year' in col.lower() or 'date' in col.lower()]
         merge_key = date_cols[0] if date_cols else None
         
         if merged_df is None:
@@ -22,6 +22,10 @@ def merge_datasets(dataframes: Dict[str, pd.DataFrame]) -> pd.DataFrame:
             if merge_key and merge_key in merged_df.columns:
                 merged_df = pd.merge(merged_df, df, on=merge_key, how='outer', suffixes=('', f'_{label}'))
             else:
-                merged_df = pd.concat([merged_df, df], axis=1)
-
+                # If no merge key, concatenate and handle duplicates
+                merged_df = pd.concat([merged_df, df], axis=1, ignore_index=False)
+    
+    # Remove duplicate columns after merge
+    merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
+    
     return merged_df

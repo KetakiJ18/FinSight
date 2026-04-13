@@ -22,7 +22,7 @@ export function KPICard({ title, value, trend, icon, description, className }: K
             </div>
 
             <div className="flex items-baseline gap-2">
-                <h2 className="text-3xl font-bold tracking-tight">{value}</h2>
+                <h2 className="text-3xl font-bold tracking-tight">{value || 'N/A'}</h2>
 
                 {trend && (
                     <span

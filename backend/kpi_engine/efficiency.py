@@ -1,4 +1,11 @@
-def calculate_asset_turnover(revenue: float, average_total_assets: float) -> float:
-    if average_total_assets == 0:
-        return 0.0
-    return revenue / average_total_assets
+def safe_div(numerator, denominator):
+    try:
+        if numerator is None or denominator in [0, None]:
+            return None
+        return float(numerator) / float(denominator)
+    except:
+        return None
+
+
+def asset_turnover(revenue: float, total_assets: float):
+    return safe_div(revenue, total_assets)

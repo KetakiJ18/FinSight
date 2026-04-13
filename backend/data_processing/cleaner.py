@@ -12,9 +12,7 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     
     cleaned_df.dropna(how='all', inplace=True)
     
-    numeric_cols = cleaned_df.select_dtypes(include=['float64', 'int64']).columns
-    cleaned_df[numeric_cols] = cleaned_df[numeric_cols].fillna(0)
-    
+    # Do not fill numeric NaNs with 0; keep as NaN for proper handling
     return cleaned_df
 
 def clean_column_name(col_name: str) -> str:

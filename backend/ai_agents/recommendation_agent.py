@@ -12,19 +12,20 @@ class RecommendationAgent:
     def generate_recommendations(self, insights: str):
         prompt = PromptTemplate(
             input_variables=["insights"],
-            template="""
-You are a financial advisor.
+            template="""You are a financial advisor.
 
-Based on these insights, provide:
-• 3 actionable business recommendations
-• Keep them short, practical, and clear
+Based on these insights, provide exactly 3 actionable business recommendations.
+Keep them short, practical, and clear. Number them 1-3.
 
 Financial insights:
 {insights}
-"""
+
+Recommendations:"""
         )
 
-        chain = prompt | self.llm
-        response = chain.invoke({"insights": insights})
-
-        return response.content
+        try:
+            chain = prompt | self.llm
+            response = chain.invoke({"insights": insights})
+            return response
+        except Exception as e:
+            return f"AI Recommendations Failed: {str(e)}. Default: 1. Review financial statements. 2. Consult financial advisor. 3. Monitor key metrics."
